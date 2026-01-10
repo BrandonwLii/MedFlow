@@ -4,7 +4,10 @@
 
 ## Overview
 
-MedFlow is an interactive simulation platform that helps visualize and optimize the flow of medical supplies through hospital facilities. It features a map editor for designing hospital layouts, fleet management for delivery agents, job queuing systems, and triage prioritization.
+MedFlow is an interactive simulation platform 
+that helps visualize and optimize the flow of medical supplies through hospital facilities. It features a map editor for designing hospital layouts, fleet management for delivery agents, job queuing systems, and triage prioritization.
+
+<img width="1470" height="838" alt="Screenshot 2026-01-10 at 5 14 02 PM" src="https://github.com/user-attachments/assets/4941145c-ef9c-421a-8583-ca3eb2bbaef1" />
 
 ## Features
 
