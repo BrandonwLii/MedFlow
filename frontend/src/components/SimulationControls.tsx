@@ -1,10 +1,19 @@
+import { useState } from 'react';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
-import { Play, Pause, Square, RotateCcw, Zap } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import { Play, Pause, Square, RotateCcw, Zap, ChevronDown } from 'lucide-react';
 import { useSimulationStore, useMapStore, useAgentStore, useJobStore, useTriageStore, useEventStore } from '../stores';
-import { generateMockScenario } from '../utils/mockData';
+import { generateScenario, AVAILABLE_SCENARIOS, type ScenarioType } from '../utils/mockData';
 
 export const SimulationControls = () => {
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioType>('rush-hour');
+
   const simState = useSimulationStore((s) => s.state);
   const speedMultiplier = useSimulationStore((s) => s.config.speedMultiplier);
   const start = useSimulationStore((s) => s.start);
@@ -20,8 +29,9 @@ export const SimulationControls = () => {
   const addEvent = useEventStore((s) => s.addEvent);
   const clearEvents = useEventStore((s) => s.clearEvents);
 
-  const handleGenerateMock = () => {
-    const scenario = generateMockScenario();
+  const handleLoadScenario = (scenarioType: ScenarioType) => {
+    setSelectedScenario(scenarioType);
+    const scenario = generateScenario(scenarioType);
     setMap(scenario.map);
     setAgents(scenario.agents);
     setJobs(scenario.jobs);
@@ -31,10 +41,12 @@ export const SimulationControls = () => {
     addEvent({
       type: 'MAP_CHANGED',
       timestamp: 0,
-      summary: 'Mock scenario loaded',
+      summary: `Loaded: ${scenario.name}`,
       details: `${scenario.agents.length} agents, ${scenario.jobs.length} jobs`,
     });
   };
+
+  const currentScenarioInfo = AVAILABLE_SCENARIOS.find(s => s.id === selectedScenario);
 
   return (
     <div className="flex items-center gap-3">
@@ -69,10 +81,41 @@ export const SimulationControls = () => {
         <span className="w-8 text-xs">{speedMultiplier}x</span>
       </div>
 
-      <Button variant="secondary" size="sm" onClick={handleGenerateMock}>
-        <Zap className="mr-2 h-4 w-4" />
-        Demo
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="secondary" size="sm">
+            <Zap className="mr-2 h-4 w-4" />
+            {currentScenarioInfo?.name || 'Demo'}
+            <ChevronDown className="ml-2 h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-72">
+          {AVAILABLE_SCENARIOS.map((scenario) => (
+            <DropdownMenuItem
+              key={scenario.id}
+              onClick={() => handleLoadScenario(scenario.id)}
+              className="flex flex-col items-start py-2"
+            >
+              <div className="flex items-center justify-between w-full">
+                <span className="font-medium">{scenario.name}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                  scenario.complexity === 'Simple' ? 'bg-green-500/20 text-green-500' :
+                  scenario.complexity === 'Medium' ? 'bg-amber-500/20 text-amber-500' :
+                  'bg-red-500/20 text-red-500'
+                }`}>
+                  {scenario.complexity}
+                </span>
+              </div>
+              <span className="text-xs text-muted-foreground mt-0.5">
+                {scenario.description}
+              </span>
+              <span className="text-[10px] text-muted-foreground mt-0.5">
+                {scenario.agents} agents • {scenario.jobs} jobs
+              </span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };

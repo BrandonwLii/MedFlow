@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Label } from './ui/label';
@@ -55,7 +55,20 @@ export const MapEditor = () => {
   } = useMapStore();
 
   const agents = useAgentStore((s) => s.agents);
-  const floorAgents = agents.filter((a) => a.floorId === activeFloorId);
+  // Memoize based on stringified positions to avoid re-renders on every tick
+  const floorAgentsKey = useMemo(
+    () => JSON.stringify(
+      agents
+        .filter((a) => a.floorId === activeFloorId)
+        .map((a) => ({ id: a.id, x: a.position.x, y: a.position.y, status: a.status }))
+    ),
+    [agents, activeFloorId]
+  );
+  const floorAgents = useMemo(
+    () => agents.filter((a) => a.floorId === activeFloorId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [floorAgentsKey]
+  );
 
   const activeFloor = map.floors.find((f) => f.id === activeFloorId);
 
@@ -303,17 +316,22 @@ export const MapEditor = () => {
     setCellType(activeFloor.id, gridPos.x, gridPos.y, updates);
   };
 
-  // Redraw when floor changes
+  // Update canvas size only when floor dimensions change
   useEffect(() => {
     if (activeFloor) {
-      setCanvasSize({ width: activeFloor.width, height: activeFloor.height });
+      setCanvasSize((prev) => {
+        if (prev.width === activeFloor.width && prev.height === activeFloor.height) {
+          return prev; // Return same reference to avoid re-render
+        }
+        return { width: activeFloor.width, height: activeFloor.height };
+      });
     }
-    drawCanvas();
-  }, [activeFloor, drawCanvas]);
+  }, [activeFloor?.width, activeFloor?.height]);
 
+  // Redraw canvas when relevant data changes
   useEffect(() => {
     drawCanvas();
-  }, [map, drawCanvas, floorAgents]);
+  }, [drawCanvas]);
 
   return (
     <div className="flex h-full">

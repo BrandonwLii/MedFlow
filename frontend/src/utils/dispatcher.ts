@@ -87,7 +87,7 @@ export const findBestAgentForJob = (
   let bestScore = Infinity;
 
   for (const agent of poolAgents) {
-    if (agent.floorId !== job.dropoff.floorId) continue; // For now, same floor only
+    if (agent.floorId !== job.dropoff.floorId) continue;
 
     // Check if agent has access to restricted areas in the path
     const pickupPos = job.pickup?.position || { x: 0, y: 0 };

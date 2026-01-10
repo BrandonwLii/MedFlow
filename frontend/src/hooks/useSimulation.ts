@@ -38,6 +38,9 @@ export const useSimulation = () => {
     onTimeCount: 0,
   });
 
+  // Throttle counter to reduce store updates
+  const tickCountRef = useRef(0);
+
   // Simulation store
   const simState = useSimulationStore((s) => s.state);
   const currentTime = useSimulationStore((s) => s.currentTime);
@@ -259,23 +262,27 @@ export const useSimulation = () => {
       }
     }
 
-    // Update metrics in store (every tick for real-time display)
-    const totalMoving = metrics.movingWithoutPayload + metrics.movingWithPayload;
-    const deadheadingPercentage = totalMoving > 0
-      ? (metrics.movingWithoutPayload / totalMoving) * 100
-      : 0;
-    const onTimePercentage = metrics.deliveredCount > 0
-      ? (metrics.onTimeCount / metrics.deliveredCount) * 100
-      : 100;
+    // Update metrics in store (throttled to every 10 ticks to reduce re-renders)
+    tickCountRef.current += 1;
+    if (tickCountRef.current >= 10) {
+      tickCountRef.current = 0;
+      const totalMoving = metrics.movingWithoutPayload + metrics.movingWithPayload;
+      const deadheadingPercentage = totalMoving > 0
+        ? (metrics.movingWithoutPayload / totalMoving) * 100
+        : 0;
+      const onTimePercentage = metrics.deliveredCount > 0
+        ? (metrics.onTimeCount / metrics.deliveredCount) * 100
+        : 100;
 
-    updateMetrics({
-      totalEnergyWh: metrics.totalEnergyWh,
-      totalCO2g: metrics.totalEnergyWh * config.co2PerWh,
-      idleWaitingSeconds: metrics.idleWaitingSeconds,
-      idleChargingSeconds: metrics.idleChargingSeconds,
-      deadheadingPercentage,
-      onTimePercentage,
-    });
+      updateMetrics({
+        totalEnergyWh: metrics.totalEnergyWh,
+        totalCO2g: metrics.totalEnergyWh * config.co2PerWh,
+        idleWaitingSeconds: metrics.idleWaitingSeconds,
+        idleChargingSeconds: metrics.idleChargingSeconds,
+        deadheadingPercentage,
+        onTimePercentage,
+      });
+    }
 
     // Check for queued jobs that need assignment
     const queuedJobs = jobs.filter((j) => j.state === 'QUEUED');
@@ -323,6 +330,25 @@ export const useSimulation = () => {
       }
     };
   }, [simState, simulateTick]);
+
+  // Reset metricsRef when simulation stops (user clicked reset or stop)
+  const prevSimState = useRef(simState);
+  useEffect(() => {
+    // Reset metrics when transitioning to STOPPED
+    if (simState === 'STOPPED' && prevSimState.current !== 'STOPPED') {
+      metricsRef.current = {
+        totalEnergyWh: 0,
+        idleWaitingSeconds: 0,
+        idleChargingSeconds: 0,
+        movingWithPayload: 0,
+        movingWithoutPayload: 0,
+        deliveredCount: 0,
+        onTimeCount: 0,
+      };
+      tickCountRef.current = 0;
+    }
+    prevSimState.current = simState;
+  }, [simState]);
 
   return {
     runReplan,
