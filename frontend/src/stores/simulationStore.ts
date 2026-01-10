@@ -17,6 +17,7 @@ interface SimState {
   baselineComparison: BaselineComparison | null;
   replanCount: number;
   lastReplanReason: string | null;
+  metrics: PlanMetrics;
 }
 
 interface SimActions {
@@ -60,6 +61,18 @@ const defaultConfig: SimulationConfig = {
   starvationThresholdSeconds: 300, // 5 minutes
 };
 
+const defaultMetrics: PlanMetrics = {
+  totalEnergyWh: 0,
+  totalCO2g: 0,
+  idleWaitingSeconds: 0,
+  idleChargingSeconds: 0,
+  onTimePercentage: 100,
+  batchedDeliveries: 0,
+  deadheadingPercentage: 0,
+  energyPerItem: 0,
+  lowEmissionChoicesPercentage: 0,
+};
+
 export const useSimulationStore = create<SimState & SimActions>()(
   immer((set) => ({
     state: 'STOPPED',
@@ -69,6 +82,7 @@ export const useSimulationStore = create<SimState & SimActions>()(
     baselineComparison: null,
     replanCount: 0,
     lastReplanReason: null,
+    metrics: { ...defaultMetrics },
 
     start: () =>
       set((state) => {
@@ -97,6 +111,7 @@ export const useSimulationStore = create<SimState & SimActions>()(
         state.baselineComparison = null;
         state.replanCount = 0;
         state.lastReplanReason = null;
+        state.metrics = { ...defaultMetrics };
       }),
 
     tick: (deltaSeconds) =>
@@ -163,11 +178,9 @@ export const useSimulationStore = create<SimState & SimActions>()(
         state.baselineComparison = comparison;
       }),
 
-    updateMetrics: (metrics) =>
+    updateMetrics: (newMetrics) =>
       set((state) => {
-        if (state.currentPlan) {
-          Object.assign(state.currentPlan.metrics, metrics);
-        }
+        state.metrics = { ...state.metrics, ...newMetrics };
       }),
   }))
 );

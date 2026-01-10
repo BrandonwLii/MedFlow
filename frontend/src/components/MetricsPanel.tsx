@@ -13,7 +13,7 @@ import { useSimulationStore, useJobStore, useAgentStore } from '../stores';
 import { formatEnergy, formatCO2, formatTime } from '../utils';
 
 export const MetricsPanel = () => {
-  const currentPlan = useSimulationStore((s) => s.currentPlan);
+  const metrics = useSimulationStore((s) => s.metrics);
   const baselineComparison = useSimulationStore((s) => s.baselineComparison);
   const replanCount = useSimulationStore((s) => s.replanCount);
   const jobs = useJobStore((s) => s.jobs);
@@ -31,18 +31,6 @@ export const MetricsPanel = () => {
     deliveredJobs.length > 0
       ? ((deliveredJobs.length - lateJobs.length) / deliveredJobs.length) * 100
       : 100;
-
-  const metrics = currentPlan?.metrics || {
-    totalEnergyWh: 0,
-    totalCO2g: 0,
-    idleWaitingSeconds: 0,
-    idleChargingSeconds: 0,
-    onTimePercentage: 100,
-    batchedDeliveries: 0,
-    deadheadingPercentage: 0,
-    energyPerItem: 0,
-    lowEmissionChoicesPercentage: 0,
-  };
 
   const idleAgents = agents.filter((a) => a.status === 'IDLE').length;
   const chargingAgents = agents.filter((a) => a.status === 'CHARGING').length;

@@ -70,7 +70,7 @@ export interface GridCell {
 export interface Room {
   id: string;
   name: string;
-  type: 'OR' | 'ICU' | 'WARD' | 'SUPPLY' | 'PHARMACY' | 'LAB' | 'GENERAL';
+  type: 'OR' | 'ICU' | 'WARD' | 'SUPPLY' | 'PHARMACY' | 'LAB' | 'GENERAL' | 'EMERGENCY' | 'IMAGING';
   floorId: string;
   cells: Position[];
   serviceCapacity: number;
