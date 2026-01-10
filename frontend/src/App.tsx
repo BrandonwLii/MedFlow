@@ -126,8 +126,8 @@ const App = () => {
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Map and Controls */}
-        <div className="flex flex-1 flex-col">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col min-h-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col min-h-0">
             <div className="border-b px-4">
               <TabsList>
                 <TabsTrigger value="map">Map Editor</TabsTrigger>
@@ -149,13 +149,13 @@ const App = () => {
             <TabsContent value="map" className="flex-1 m-0 p-0">
               <MapEditor />
             </TabsContent>
-            <TabsContent value="fleet" className="flex-1 m-0 p-4 overflow-auto">
+            <TabsContent value="fleet" className="flex-1 min-h-0 m-0 p-4 overflow-auto">
               <FleetPanel />
             </TabsContent>
-            <TabsContent value="queue" className="flex-1 m-0 p-4 overflow-auto">
+            <TabsContent value="queue" className="flex-1 min-h-0 m-0 p-4 overflow-auto">
               <JobQueue />
             </TabsContent>
-            <TabsContent value="triage" className="flex-1 m-0 p-4 overflow-auto">
+            <TabsContent value="triage" className="flex-1 min-h-0 m-0 p-4 overflow-auto">
               <TriageBoard />
             </TabsContent>
           </Tabs>
