@@ -2,8 +2,6 @@
 
 **Intelligent Hospital Supply Delivery Optimization Platform**
 
-<img width="1470" alt="MedFlow Screenshot" src="https://github.com/user-attachments/assets/4941145c-ef9c-421a-8583-ca3eb2bbaef1" />
-
 An AI-powered logistics simulation for autonomous hospital delivery carts. Optimize routes, reduce energy consumption, and ensure critical supplies arrive on time.
 
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
