@@ -7,26 +7,47 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Checkbox } from './ui/checkbox';
 import {
   Plus,
   Bot,
   Battery,
   Package,
   Zap,
+  Settings,
+  Shield,
 } from 'lucide-react';
 import { useAgentStore, createDefaultAgent } from '../stores';
 import { useMapStore } from '../stores';
 import { generateId, AGENT_STATUS_COLORS } from '../utils';
 import type { Agent, AgentType } from '../types';
 
+// Available access profiles for restricted areas
+const ACCESS_PROFILES = [
+  { id: 'GENERAL', label: 'General', description: 'Standard corridors and open areas' },
+  { id: 'WARD', label: 'Ward', description: 'Patient ward areas' },
+  { id: 'ICU', label: 'ICU', description: 'Intensive Care Unit' },
+  { id: 'OR', label: 'Operating Room', description: 'Surgical suites' },
+  { id: 'PHARMACY', label: 'Pharmacy', description: 'Medication storage' },
+  { id: 'EMERGENCY', label: 'Emergency', description: 'Emergency department' },
+  { id: 'SUPPLY', label: 'Supply', description: 'Supply storage areas' },
+] as const;
+
 export const FleetPanel = () => {
   const agents = useAgentStore((s) => s.agents);
   const addAgent = useAgentStore((s) => s.addAgent);
+  const updateAgent = useAgentStore((s) => s.updateAgent);
+  const setAgentPool = useAgentStore((s) => s.setAgentPool);
   const activeFloorId = useMapStore((s) => s.activeFloorId);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newAgentName, setNewAgentName] = useState('');
   const [newAgentType, setNewAgentType] = useState<AgentType>('CART');
+
+  // Edit agent state
+  const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
+  const [editAccessProfiles, setEditAccessProfiles] = useState<string[]>([]);
+  const [editPool, setEditPool] = useState<'URGENT' | 'NON_URGENT'>('NON_URGENT');
 
   const handleAddAgent = () => {
     if (!newAgentName || !activeFloorId) return;
@@ -43,6 +64,27 @@ export const FleetPanel = () => {
     setIsDialogOpen(false);
   };
 
+  const handleStartEdit = (agent: Agent) => {
+    setEditingAgent(agent);
+    setEditAccessProfiles([...agent.accessProfiles]);
+    setEditPool(agent.pool);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingAgent) return;
+    updateAgent(editingAgent.id, { accessProfiles: editAccessProfiles });
+    setAgentPool(editingAgent.id, editPool);
+    setEditingAgent(null);
+  };
+
+  const handleToggleProfile = (profileId: string) => {
+    setEditAccessProfiles((prev) =>
+      prev.includes(profileId)
+        ? prev.filter((p) => p !== profileId)
+        : [...prev, profileId]
+    );
+  };
+
   const urgentPoolAgents = agents.filter((a) => a.pool === 'URGENT');
   const nonUrgentPoolAgents = agents.filter((a) => a.pool === 'NON_URGENT');
 
@@ -54,16 +96,26 @@ export const FleetPanel = () => {
             <Bot className="h-4 w-4" />
             <CardTitle className="text-sm">{agent.name}</CardTitle>
           </div>
-          <Badge
-            style={{
-              backgroundColor: AGENT_STATUS_COLORS[agent.status] + '20',
-              color: AGENT_STATUS_COLORS[agent.status],
-              borderColor: AGENT_STATUS_COLORS[agent.status],
-            }}
-            variant="outline"
-          >
-            {agent.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge
+              style={{
+                backgroundColor: AGENT_STATUS_COLORS[agent.status] + '20',
+                color: AGENT_STATUS_COLORS[agent.status],
+                borderColor: AGENT_STATUS_COLORS[agent.status],
+              }}
+              variant="outline"
+            >
+              {agent.status}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => handleStartEdit(agent)}
+            >
+              <Settings className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="py-2 px-4">
@@ -82,6 +134,15 @@ export const FleetPanel = () => {
               <Zap className="h-3 w-3" />
               Speed: {agent.speed} c/s
             </span>
+          </div>
+          {/* Access Profiles */}
+          <div className="flex items-center gap-1 flex-wrap">
+            <Shield className="h-3 w-3 text-muted-foreground" />
+            {agent.accessProfiles.map((profile) => (
+              <Badge key={profile} variant="outline" className="text-[10px] py-0 px-1">
+                {profile}
+              </Badge>
+            ))}
           </div>
           {agent.inventorySlots.length > 0 && (
             <div className="mt-2">
@@ -201,6 +262,84 @@ export const FleetPanel = () => {
           </p>
         </Card>
       )}
+
+      {/* Edit Agent Dialog */}
+      <Dialog open={!!editingAgent} onOpenChange={(open) => !open && setEditingAgent(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Edit {editingAgent?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 pt-4">
+            {/* Pool Selection */}
+            <div>
+              <Label className="text-sm font-medium">Agent Pool</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Urgent pool is reserved for Immediate and Emergency jobs
+              </p>
+              <Select
+                value={editPool}
+                onValueChange={(v) => setEditPool(v as 'URGENT' | 'NON_URGENT')}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="URGENT">Urgent Pool</SelectItem>
+                  <SelectItem value="NON_URGENT">Non-Urgent Pool</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Access Profiles */}
+            <div>
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Area Access Profiles
+              </Label>
+              <p className="text-xs text-muted-foreground mb-3">
+                Select which restricted areas this agent can access
+              </p>
+              <div className="space-y-2">
+                {ACCESS_PROFILES.map((profile) => (
+                  <div
+                    key={profile.id}
+                    className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50"
+                  >
+                    <Checkbox
+                      id={`profile-${profile.id}`}
+                      checked={editAccessProfiles.includes(profile.id)}
+                      onCheckedChange={() => handleToggleProfile(profile.id)}
+                    />
+                    <div className="flex-1">
+                      <label
+                        htmlFor={`profile-${profile.id}`}
+                        className="text-sm font-medium cursor-pointer"
+                      >
+                        {profile.label}
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        {profile.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditingAgent(null)} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit} className="flex-1">
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -54,7 +54,7 @@ export const findBestAgentForJob = (
     (a) =>
       a.status === 'IDLE' &&
       !a.currentJobId &&
-      a.battery > 20 // Minimum battery threshold
+      a.battery > 10 // Minimum battery threshold (lowered from 20 to allow more assignments)
   );
 
   if (availableAgents.length === 0) return null;
@@ -97,10 +97,16 @@ export const findBestAgentForJob = (
     const pathToDropoff = findPath(floor, pickupPos, job.dropoff.position, agent);
     if (!pathToDropoff) continue;
 
-    // Check battery
-    const totalDrain = getPathBatteryDrain(pathToPickup, agent.batteryDrainRate) +
+    // Check battery - include service times and reserve for return to charger
+    const movementDrain = getPathBatteryDrain(pathToPickup, agent.batteryDrainRate) +
       getPathBatteryDrain(pathToDropoff, agent.batteryDrainRate);
-    if (agent.battery - totalDrain < 10) continue;
+    // Add idle drain during service times (10% of movement rate per second)
+    const idleDrainRate = agent.batteryDrainRate * 0.1;
+    const serviceDrain = ((job.pickupServiceTime || 15) + (job.dropoffServiceTime || 20)) * idleDrainRate;
+    // Reserve 15% for return journey to charger
+    const reserveBattery = 15;
+    const totalDrain = movementDrain + serviceDrain;
+    if (agent.battery - totalDrain < reserveBattery) continue;
 
     // Score based on distance
     const totalDistance = pathToPickup.length + pathToDropoff.length;

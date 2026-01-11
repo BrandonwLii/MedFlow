@@ -46,6 +46,21 @@ export const SimulationControls = () => {
     });
   };
 
+  const handleReset = () => {
+    // Reload the current scenario to reset everything
+    const scenario = generateScenario(selectedScenario);
+    setMap(scenario.map);
+    setAgents(scenario.agents);
+    setJobs(scenario.jobs);
+    setCases(scenario.triageCases);
+    clearEvents();
+    reset();
+  };
+
+  const handleStop = () => {
+    stop();
+  };
+
   const currentScenarioInfo = AVAILABLE_SCENARIOS.find(s => s.id === selectedScenario);
 
   return (
@@ -60,10 +75,10 @@ export const SimulationControls = () => {
             <Play className="h-4 w-4" />
           </Button>
         )}
-        <Button variant="outline" size="sm" onClick={stop}>
+        <Button variant="outline" size="sm" onClick={handleStop}>
           <Square className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="sm" onClick={reset}>
+        <Button variant="outline" size="sm" onClick={handleReset}>
           <RotateCcw className="h-4 w-4" />
         </Button>
       </div>

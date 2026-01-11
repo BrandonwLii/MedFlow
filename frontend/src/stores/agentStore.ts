@@ -170,6 +170,7 @@ export const useAgentStore = create<AgentState & AgentActions>()(
         const agent = state.agents.find((a) => a.id === agentId);
         if (agent) {
           agent.currentJobId = undefined;
+          agent.currentPayload = 0; // Reset payload when job cleared
           agent.status = 'IDLE';
         }
       }),

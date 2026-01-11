@@ -226,7 +226,13 @@ export type TriageBundle =
   | 'CRASH_CODE_BLUE'
   | 'TRAUMA'
   | 'OR_PREP'
-  | 'ISOLATION';
+  | 'ISOLATION'
+  | 'SURGERY'
+  | 'GENERAL'
+  | 'CARDIAC'
+  | 'RESPIRATORY'
+  | 'SEPSIS'
+  | 'RECOVERY';
 
 export const TRIAGE_BUNDLES: Record<TriageBundle, { name: string; items: DeliveryItem[] }> = {
   CRASH_CODE_BLUE: {
@@ -259,6 +265,54 @@ export const TRIAGE_BUNDLES: Record<TriageBundle, { name: string; items: Deliver
       { type: 'PPE Kit', quantity: 5, weight: 0.5 },
       { type: 'Isolation Gowns', quantity: 10, weight: 1 },
       { type: 'N95 Masks', quantity: 20, weight: 0.2 },
+    ],
+  },
+  SURGERY: {
+    name: 'Surgery',
+    items: [
+      { type: 'Surgical Kit', quantity: 1, weight: 4 },
+      { type: 'Sterile Drapes', quantity: 5, weight: 2 },
+      { type: 'Sutures', quantity: 10, weight: 0.5 },
+    ],
+  },
+  GENERAL: {
+    name: 'General Care',
+    items: [
+      { type: 'IV Fluids', quantity: 2, weight: 2 },
+      { type: 'Medications', quantity: 5, weight: 0.5 },
+      { type: 'Bandages', quantity: 10, weight: 0.5 },
+    ],
+  },
+  CARDIAC: {
+    name: 'Cardiac Emergency',
+    items: [
+      { type: 'Defibrillator Pads', quantity: 2, weight: 0.5 },
+      { type: 'Cardiac Meds', quantity: 5, weight: 0.3 },
+      { type: 'ECG Electrodes', quantity: 10, weight: 0.2 },
+    ],
+  },
+  RESPIRATORY: {
+    name: 'Respiratory Support',
+    items: [
+      { type: 'Oxygen Supplies', quantity: 2, weight: 3 },
+      { type: 'Nebulizer Kit', quantity: 1, weight: 1 },
+      { type: 'Respiratory Meds', quantity: 5, weight: 0.5 },
+    ],
+  },
+  SEPSIS: {
+    name: 'Sepsis Protocol',
+    items: [
+      { type: 'IV Antibiotics', quantity: 3, weight: 1 },
+      { type: 'Blood Culture Kits', quantity: 2, weight: 0.5 },
+      { type: 'Fluid Bolus', quantity: 4, weight: 4 },
+    ],
+  },
+  RECOVERY: {
+    name: 'Post-Op Recovery',
+    items: [
+      { type: 'Pain Management', quantity: 5, weight: 0.3 },
+      { type: 'Wound Care Kit', quantity: 2, weight: 1 },
+      { type: 'Monitoring Supplies', quantity: 3, weight: 0.5 },
     ],
   },
 };

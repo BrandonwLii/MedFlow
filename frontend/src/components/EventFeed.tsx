@@ -14,7 +14,7 @@ import {
   RefreshCw,
   Ban,
 } from 'lucide-react';
-import { useEventStore } from '../stores';
+import { useEventStore, useMapStore } from '../stores';
 import { formatTime } from '../utils';
 import type { EventType } from '../types';
 
@@ -69,10 +69,17 @@ export const EventFeed = () => {
   const unacknowledgedCount = useEventStore((s) => s.unacknowledgedCount);
   const acknowledgeEvent = useEventStore((s) => s.acknowledgeEvent);
   const acknowledgeAll = useEventStore((s) => s.acknowledgeAll);
+  const setHighlight = useMapStore((s) => s.setHighlight);
+
+  const handleShowOnMap = (position: { x: number; y: number }, floorId: string) => {
+    setHighlight(position, floorId);
+    // Dispatch custom event to switch to map tab
+    window.dispatchEvent(new CustomEvent('medflow:show-on-map'));
+  };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b p-3">
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="flex shrink-0 items-center justify-between border-b p-3">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4" />
           <h3 className="text-sm font-medium">Events</h3>
@@ -85,12 +92,12 @@ export const EventFeed = () => {
         {unacknowledgedCount > 0 && (
           <Button variant="ghost" size="sm" onClick={acknowledgeAll}>
             <CheckCheck className="mr-1 h-3 w-3" />
-            Ack All
+            Dismiss All
           </Button>
         )}
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="space-y-1 p-2">
           {events.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
@@ -145,11 +152,12 @@ export const EventFeed = () => {
                         )}
                       </div>
                     )}
-                    {event.highlightPosition && (
+                    {event.highlightPosition && event.highlightFloorId && (
                       <Button
                         variant="link"
                         size="sm"
                         className="h-auto p-0 text-[10px]"
+                        onClick={() => handleShowOnMap(event.highlightPosition!, event.highlightFloorId!)}
                       >
                         <MapPin className="mr-1 h-2 w-2" />
                         Show on map
