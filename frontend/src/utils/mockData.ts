@@ -1,16 +1,11 @@
 import type {
-  HospitalMap,
   Floor,
   Agent,
   Job,
   TriageCase,
   GridCell,
   Room,
-  Charger,
-  StoragePoint,
-  StagingArea,
   Scenario,
-  SimulationConfig,
 } from '../types';
 import { generateId } from './index';
 
@@ -71,6 +66,7 @@ const makeRoom = (
   for (let y = startY; y <= endY; y++) {
     for (let x = startX; x <= endX; x++) {
       if (grid[y] && grid[y][x]) {
+        grid[y][x].walkable = true;
         grid[y][x].isObstacle = false;
         grid[y][x].roomId = roomId;
       }
@@ -135,6 +131,38 @@ const createRushHourFloor = (): Floor => {
   for (let y = 18; y < 24; y++) makeWalkable(grid, y, 5);
   for (let y = 18; y < 24; y++) makeWalkable(grid, y, 14);
 
+  // RESTRICTED AREAS - ICU requires ICU access profile
+  // Mark ICU room and path as restricted
+  setCell(grid, 5, 5, { isRestricted: true, restrictedAccessProfiles: ['ICU'] });
+  for (let y = 6; y < 12; y++) {
+    setCell(grid, y, 5, { isRestricted: true, restrictedAccessProfiles: ['ICU'] });
+  }
+
+  // RESTRICTED AREAS - OR requires OR access profile
+  // Mark OR Suite and path as restricted
+  setCell(grid, 5, 14, { isRestricted: true, restrictedAccessProfiles: ['OR'] });
+  for (let y = 6; y < 12; y++) {
+    setCell(grid, y, 14, { isRestricted: true, restrictedAccessProfiles: ['OR'] });
+  }
+
+  // RESTRICTED AREAS - Pharmacy requires PHARMACY access
+  setCell(grid, 24, 14, { isRestricted: true, restrictedAccessProfiles: ['PHARMACY'] });
+  for (let y = 18; y < 24; y++) {
+    setCell(grid, y, 14, { isRestricted: true, restrictedAccessProfiles: ['PHARMACY'] });
+  }
+
+  // QUARANTINE ZONE - Blocked area (e.g., contaminated section)
+  // Create a small quarantine area near the main corridor
+  for (let y = 13; y <= 16; y++) {
+    for (let x = 24; x <= 26; x++) {
+      setCell(grid, y, x, { walkable: false, isObstacle: true, isQuarantine: true });
+    }
+  }
+
+  // CONNECTOR - Elevator location (for multi-floor navigation)
+  makeWalkable(grid, 15, 20);
+  setCell(grid, 15, 20, { isConnector: true, connectorId: 'elevator-1' });
+
   // Chargers
   makeWalkable(grid, 15, 2);
   setCell(grid, 15, 2, { isCharger: true });
@@ -166,12 +194,12 @@ const createRushHourScenario = (): Scenario => {
   ];
 
   const agents: Agent[] = [
-    { id: generateId('agent'), name: 'Cart Alpha', type: 'CART', position: { x: 10, y: 15 }, floorId: floor.id, speed: 1, battery: 100, maxBattery: 100, batteryDrainRate: 0.2, payloadLimit: 50, currentPayload: 0, accessProfiles: ['GENERAL', 'WARD'], inventorySlots: [], status: 'IDLE', pool: 'NON_URGENT' },
-    { id: generateId('agent'), name: 'Cart Beta', type: 'CART', position: { x: 30, y: 15 }, floorId: floor.id, speed: 1, battery: 85, maxBattery: 100, batteryDrainRate: 0.2, payloadLimit: 50, currentPayload: 0, accessProfiles: ['GENERAL', 'WARD', 'ICU'], inventorySlots: [], status: 'IDLE', pool: 'NON_URGENT' },
-    { id: generateId('agent'), name: 'Cart Gamma', type: 'CART', position: { x: 20, y: 14 }, floorId: floor.id, speed: 1.2, battery: 95, maxBattery: 100, batteryDrainRate: 0.2, payloadLimit: 50, currentPayload: 0, accessProfiles: ['GENERAL', 'ICU', 'OR'], inventorySlots: [], status: 'IDLE', pool: 'URGENT' },
-    { id: generateId('agent'), name: 'Cart Delta', type: 'CART', position: { x: 15, y: 13 }, floorId: floor.id, speed: 1, battery: 72, maxBattery: 100, batteryDrainRate: 0.2, payloadLimit: 75, currentPayload: 0, accessProfiles: ['GENERAL', 'WARD', 'PHARMACY'], inventorySlots: [], status: 'IDLE', pool: 'NON_URGENT' },
-    { id: generateId('agent'), name: 'Cart Epsilon', type: 'CART', position: { x: 25, y: 16 }, floorId: floor.id, speed: 1.5, battery: 100, maxBattery: 100, batteryDrainRate: 0.3, payloadLimit: 30, currentPayload: 0, accessProfiles: ['GENERAL', 'ICU', 'OR', 'EMERGENCY'], inventorySlots: [], status: 'IDLE', pool: 'URGENT' },
-    { id: generateId('agent'), name: 'Cart Zeta', type: 'CART', position: { x: 18, y: 17 }, floorId: floor.id, speed: 0.8, battery: 90, maxBattery: 100, batteryDrainRate: 0.15, payloadLimit: 100, currentPayload: 0, accessProfiles: ['GENERAL', 'WARD', 'SUPPLY'], inventorySlots: [], status: 'IDLE', pool: 'NON_URGENT' },
+    { id: generateId('agent'), name: 'Cart Alpha', type: 'CART', position: { x: 10, y: 15 }, floorId: floor.id, speed: 1, battery: 85, maxBattery: 100, batteryDrainRate: 0.3, payloadLimit: 50, currentPayload: 0, accessProfiles: ['GENERAL', 'WARD'], inventorySlots: [], status: 'IDLE', pool: 'NON_URGENT' },
+    { id: generateId('agent'), name: 'Cart Beta', type: 'CART', position: { x: 30, y: 15 }, floorId: floor.id, speed: 1, battery: 90, maxBattery: 100, batteryDrainRate: 0.3, payloadLimit: 50, currentPayload: 0, accessProfiles: ['GENERAL', 'WARD', 'ICU'], inventorySlots: [], status: 'IDLE', pool: 'NON_URGENT' },
+    { id: generateId('agent'), name: 'Cart Gamma', type: 'CART', position: { x: 20, y: 14 }, floorId: floor.id, speed: 1.2, battery: 95, maxBattery: 100, batteryDrainRate: 0.3, payloadLimit: 50, currentPayload: 0, accessProfiles: ['GENERAL', 'ICU', 'OR'], inventorySlots: [], status: 'IDLE', pool: 'URGENT' },
+    { id: generateId('agent'), name: 'Cart Delta', type: 'CART', position: { x: 15, y: 13 }, floorId: floor.id, speed: 1, battery: 80, maxBattery: 100, batteryDrainRate: 0.3, payloadLimit: 75, currentPayload: 0, accessProfiles: ['GENERAL', 'WARD', 'PHARMACY'], inventorySlots: [], status: 'IDLE', pool: 'NON_URGENT' },
+    { id: generateId('agent'), name: 'Cart Epsilon', type: 'CART', position: { x: 25, y: 16 }, floorId: floor.id, speed: 1.5, battery: 95, maxBattery: 100, batteryDrainRate: 0.4, payloadLimit: 30, currentPayload: 0, accessProfiles: ['GENERAL', 'ICU', 'OR', 'EMERGENCY'], inventorySlots: [], status: 'IDLE', pool: 'URGENT' },
+    { id: generateId('agent'), name: 'Cart Zeta', type: 'CART', position: { x: 18, y: 17 }, floorId: floor.id, speed: 0.8, battery: 85, maxBattery: 100, batteryDrainRate: 0.2, payloadLimit: 100, currentPayload: 0, accessProfiles: ['GENERAL', 'WARD', 'SUPPLY'], inventorySlots: [], status: 'IDLE', pool: 'NON_URGENT' },
   ];
 
   const jobs: Job[] = [
@@ -191,7 +219,7 @@ const createRushHourScenario = (): Scenario => {
     { id: generateId('triage'), level: 1, location: { position: { x: 5, y: 5 }, floorId: floor.id }, bundle: 'TRAUMA', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'Critical trauma patient in ICU Bay 1' },
     { id: generateId('triage'), level: 2, location: { position: { x: 14, y: 5 }, floorId: floor.id }, bundle: 'SURGERY', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'Emergency surgery prep in OR Suite A' },
     { id: generateId('triage'), level: 3, location: { position: { x: 31, y: 5 }, floorId: floor.id }, bundle: 'GENERAL', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'Ward A restocking' },
-    { id: generateId('triage'), level: 4, location: { position: { x: 5, y: 24 }, floorId: floor.id }, bundle: 'GENERAL', linkedJobIds: [], status: 'PENDING', createdAt: 0, notes: 'Ward B scheduled supply run' },
+    { id: generateId('triage'), level: 4, location: { position: { x: 5, y: 24 }, floorId: floor.id }, bundle: 'GENERAL', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'Ward B scheduled supply run' },
   ];
 
   return {
@@ -200,7 +228,10 @@ const createRushHourScenario = (): Scenario => {
     map: {
       floors: [floor],
       rooms,
-      connectors: [],
+      connectors: [
+        // Elevator connector (demonstrates multi-floor structure)
+        { id: 'elevator-1', name: 'Main Elevator', type: 'ELEVATOR', floors: [{ floorId: floor.id, position: { x: 20, y: 15 } }], travelTime: 10, energyCost: 2, capacity: 2 },
+      ],
       chargers: [
         { id: generateId('charger'), position: { x: 2, y: 15 }, floorId: floor.id, chargeRate: 1, capacity: 1 },
         { id: generateId('charger'), position: { x: 37, y: 15 }, floorId: floor.id, chargeRate: 1, capacity: 1 },
@@ -379,8 +410,8 @@ const createEmergencyDeptScenario = (): Scenario => {
     { id: generateId('triage'), level: 2, location: { position: { x: 44, y: 18 }, floorId: floor.id }, bundle: 'RESPIRATORY', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'Respiratory failure - intubation likely' },
     { id: generateId('triage'), level: 3, location: { position: { x: 12, y: 9 }, floorId: floor.id }, bundle: 'GENERAL', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'Laceration requiring sutures' },
     { id: generateId('triage'), level: 3, location: { position: { x: 12, y: 13 }, floorId: floor.id }, bundle: 'CARDIAC', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'Chest pain - rule out ACS' },
-    { id: generateId('triage'), level: 4, location: { position: { x: 35, y: 26 }, floorId: floor.id }, bundle: 'GENERAL', linkedJobIds: [], status: 'PENDING', createdAt: 0, notes: 'Minor injury - fast track' },
-    { id: generateId('triage'), level: 5, location: { position: { x: 40, y: 26 }, floorId: floor.id }, bundle: 'GENERAL', linkedJobIds: [], status: 'PENDING', createdAt: 0, notes: 'Non-urgent consultation' },
+    { id: generateId('triage'), level: 4, location: { position: { x: 35, y: 26 }, floorId: floor.id }, bundle: 'GENERAL', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'Minor injury - fast track' },
+    { id: generateId('triage'), level: 5, location: { position: { x: 40, y: 26 }, floorId: floor.id }, bundle: 'GENERAL', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'Non-urgent consultation' },
   ];
 
   return {
@@ -592,7 +623,7 @@ const createMultiWingScenario = (): Scenario => {
     { id: generateId('triage'), level: 2, location: { position: { x: 46, y: 11 }, floorId: floor.id }, bundle: 'SURGERY', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'OR 1 - Emergency laparotomy' },
     { id: generateId('triage'), level: 2, location: { position: { x: 46, y: 15 }, floorId: floor.id }, bundle: 'SURGERY', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'OR 2 - Scheduled cardiac surgery' },
     { id: generateId('triage'), level: 3, location: { position: { x: 18, y: 5 }, floorId: floor.id }, bundle: 'GENERAL', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'ICU Bed 3 - Stable, med delivery needed' },
-    { id: generateId('triage'), level: 4, location: { position: { x: 10, y: 35 }, floorId: floor.id }, bundle: 'GENERAL', linkedJobIds: [], status: 'PENDING', createdAt: 0, notes: 'Ward restocking round' },
+    { id: generateId('triage'), level: 4, location: { position: { x: 10, y: 35 }, floorId: floor.id }, bundle: 'GENERAL', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'Ward restocking round' },
   ];
 
   return {
@@ -810,8 +841,8 @@ const createSurgicalCenterScenario = (): Scenario => {
     { id: generateId('triage'), level: 2, location: { position: { x: 20, y: 5 }, floorId: floor.id }, bundle: 'SURGERY', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'OR 2 - Total knee replacement' },
     { id: generateId('triage'), level: 2, location: { position: { x: 26, y: 5 }, floorId: floor.id }, bundle: 'SURGERY', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'OR 3 - Laparoscopic cholecystectomy' },
     { id: generateId('triage'), level: 2, location: { position: { x: 32, y: 5 }, floorId: floor.id }, bundle: 'SURGERY', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'OR 4 - Hernia repair' },
-    { id: generateId('triage'), level: 3, location: { position: { x: 14, y: 30 }, floorId: floor.id }, bundle: 'SURGERY', linkedJobIds: [], status: 'PENDING', createdAt: 0, notes: 'OR 5 - CABG scheduled 2pm' },
-    { id: generateId('triage'), level: 3, location: { position: { x: 20, y: 30 }, floorId: floor.id }, bundle: 'SURGERY', linkedJobIds: [], status: 'PENDING', createdAt: 0, notes: 'OR 6 - Craniotomy scheduled 3pm' },
+    { id: generateId('triage'), level: 3, location: { position: { x: 14, y: 30 }, floorId: floor.id }, bundle: 'SURGERY', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'OR 5 - CABG scheduled 2pm' },
+    { id: generateId('triage'), level: 3, location: { position: { x: 20, y: 30 }, floorId: floor.id }, bundle: 'SURGERY', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'OR 6 - Craniotomy scheduled 3pm' },
     { id: generateId('triage'), level: 4, location: { position: { x: 43, y: 10 }, floorId: floor.id }, bundle: 'RECOVERY', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'PACU 1 - Post-op recovery' },
     { id: generateId('triage'), level: 4, location: { position: { x: 43, y: 13 }, floorId: floor.id }, bundle: 'RECOVERY', linkedJobIds: [], status: 'ACTIVE', createdAt: 0, notes: 'PACU 2 - Post-op recovery' },
   ];

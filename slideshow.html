@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedFlow - Hackathon Pitch</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #ffffff;
+      color: #1a1a2e;
+      overflow: hidden;
+    }
+
+    .slideshow {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 100px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+      background: #ffffff;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    h1 {
+      font-size: 4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #0066cc;
+    }
+
+    h2 {
+      font-size: 2.8rem;
+      font-weight: 600;
+      margin-bottom: 40px;
+      color: #1a1a2e;
+    }
+
+    h3 {
+      font-size: 1.8rem;
+      color: #0066cc;
+      margin-bottom: 20px;
+    }
+
+    .subtitle {
+      font-size: 1.8rem;
+      color: #666666;
+      margin-bottom: 40px;
+    }
+
+    p {
+      font-size: 1.4rem;
+      line-height: 1.8;
+      color: #444444;
+      max-width: 900px;
+      text-align: center;
+    }
+
+    ul {
+      list-style: none;
+      font-size: 1.4rem;
+      line-height: 2.2;
+      text-align: left;
+      max-width: 800px;
+    }
+
+    ul li {
+      position: relative;
+      padding-left: 30px;
+      color: #444444;
+    }
+
+    ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 12px;
+      width: 12px;
+      height: 12px;
+      background: #0066cc;
+      border-radius: 50%;
+    }
+
+    ul.green-bullets li::before {
+      background: #22a355;
+    }
+
+    ul li strong {
+      color: #1a1a2e;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      margin-top: 40px;
+    }
+
+    .stat-grid.four-col {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .stat-box {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 16px;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .stat-box.green {
+      background: #f0fdf4;
+      border-color: #22a355;
+    }
+
+    .stat-box .number {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #0066cc;
+    }
+
+    .stat-box.green .number {
+      color: #22a355;
+    }
+
+    .stat-box .label {
+      font-size: 1.1rem;
+      color: #666666;
+      margin-top: 10px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 25px;
+      margin-top: 30px;
+      max-width: 1000px;
+    }
+
+    .feature-box {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 25px;
+      text-align: left;
+    }
+
+    .feature-box.green {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+
+    .feature-box h4 {
+      font-size: 1.3rem;
+      color: #0066cc;
+      margin-bottom: 10px;
+    }
+
+    .feature-box.green h4 {
+      color: #22a355;
+    }
+
+    .feature-box p {
+      font-size: 1.1rem;
+      text-align: left;
+      color: #666666;
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 25px;
+      margin-top: 30px;
+      max-width: 1000px;
+    }
+
+    .scenario-box {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 25px;
+      text-align: left;
+    }
+
+    .scenario-box h4 {
+      font-size: 1.2rem;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+    }
+
+    .scenario-box .meta {
+      font-size: 0.95rem;
+      color: #0066cc;
+      margin-bottom: 10px;
+    }
+
+    .scenario-box p {
+      font-size: 1rem;
+      text-align: left;
+      color: #666666;
+    }
+
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-top: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .flow-step {
+      background: #e6f2ff;
+      border: 1px solid #0066cc;
+      border-radius: 10px;
+      padding: 20px 30px;
+      font-size: 1.1rem;
+      color: #1a1a2e;
+    }
+
+    .flow-arrow {
+      font-size: 1.5rem;
+      color: #0066cc;
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 30px;
+      max-width: 900px;
+    }
+
+    .tech-box {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .tech-box .name {
+      font-size: 1.2rem;
+      color: #1a1a2e;
+      margin-bottom: 5px;
+    }
+
+    .tech-box .desc {
+      font-size: 0.95rem;
+      color: #666666;
+    }
+
+    .code-block {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 30px 40px;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 1.1rem;
+      color: #d4d4d4;
+      margin-top: 30px;
+      text-align: left;
+    }
+
+    .code-block .keyword {
+      color: #569cd6;
+    }
+
+    .code-block .function {
+      color: #dcdcaa;
+    }
+
+    .code-block .string {
+      color: #ce9178;
+    }
+
+    .code-block .comment {
+      color: #6a9955;
+    }
+
+    .code-block .number {
+      color: #b5cea8;
+    }
+
+    .code-block .type {
+      color: #4ec9b0;
+    }
+
+    .highlight {
+      color: #0066cc;
+      font-weight: 600;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+      z-index: 100;
+    }
+
+    .controls button {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      color: #1a1a2e;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      transition: all 0.3s ease;
+    }
+
+    .controls button:hover {
+      background: #e0e0e0;
+    }
+
+    .slide-counter {
+      position: fixed;
+      bottom: 30px;
+      right: 40px;
+      font-size: 1rem;
+      color: #999999;
+    }
+
+    .logo {
+      font-size: 6rem;
+      margin-bottom: 20px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: #0066cc;
+      color: #fff;
+      padding: 15px 40px;
+      border-radius: 30px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-decoration: none;
+      margin-top: 30px;
+    }
+
+    .cta-button:hover {
+      background: #0052a3;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: start;
+      max-width: 1100px;
+    }
+
+    .two-col .col h3 {
+      margin-bottom: 20px;
+    }
+
+    .two-col .col ul {
+      font-size: 1.2rem;
+    }
+
+    .code-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .code-card {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .code-card-header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 15px 20px;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .code-card-body {
+      padding: 0;
+    }
+
+    .code-card pre {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+
+    .code-card-footer {
+      padding: 15px 20px;
+      font-size: 0.95rem;
+      color: #666666;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .impact-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+      margin-top: 40px;
+    }
+
+    .impact-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .impact-arrow .arrow {
+      font-size: 3rem;
+      color: #22a355;
+    }
+
+    .impact-arrow .label {
+      font-size: 1rem;
+      color: #666;
+    }
+
+    .impact-box {
+      text-align: center;
+      padding: 30px 40px;
+      border-radius: 16px;
+    }
+
+    .impact-box.before {
+      background: #fef2f2;
+      border: 2px solid #ef4444;
+    }
+
+    .impact-box.after {
+      background: #f0fdf4;
+      border: 2px solid #22a355;
+    }
+
+    .impact-box .value {
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+
+    .impact-box.before .value {
+      color: #ef4444;
+    }
+
+    .impact-box.after .value {
+      color: #22a355;
+    }
+
+    .impact-box .desc {
+      font-size: 1rem;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .env-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 25px;
+      margin-top: 30px;
+      max-width: 1000px;
+    }
+
+    .env-metric {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 25px;
+      text-align: center;
+    }
+
+    .env-metric .icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+    }
+
+    .env-metric h4 {
+      font-size: 1.2rem;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+    }
+
+    .env-metric p {
+      font-size: 0.95rem;
+      color: #666;
+      text-align: center;
+    }
+
+    .env-metric .formula {
+      background: #dcfce7;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.85rem;
+      color: #166534;
+      margin-top: 12px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="slideshow">
+    <!-- Slide 1: Title -->
+    <div class="slide active">
+      <div class="logo">🏥</div>
+      <h1>MedFlow</h1>
+      <p class="subtitle">Intelligent Hospital Supply Delivery Optimization</p>
+    </div>
+
+    <!-- Slide 2: Problem -->
+    <div class="slide">
+      <h2>The Problem</h2>
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="number">30%</div>
+          <div class="label">of nurse time spent hunting for supplies</div>
+        </div>
+        <div class="stat-box">
+          <div class="number">45min</div>
+          <div class="label">average delay for non-urgent deliveries</div>
+        </div>
+        <div class="stat-box">
+          <div class="number">0%</div>
+          <div class="label">visibility into delivery status</div>
+        </div>
+      </div>
+      <p style="margin-top: 40px;">Manual dispatch leads to missed deadlines, wasted energy, and burned-out staff.</p>
+    </div>
+
+    <!-- Slide 3: Solution -->
+    <div class="slide">
+      <h2>Our Solution</h2>
+      <p style="font-size: 1.6rem; margin-bottom: 40px;">AI-powered logistics platform for autonomous hospital delivery carts</p>
+      <div class="feature-grid">
+        <div class="feature-box">
+          <h4>Smart Dispatching</h4>
+          <p>Automatically assigns the right cart to the right job based on location, battery, and access.</p>
+        </div>
+        <div class="feature-box">
+          <h4>Priority Routing</h4>
+          <p>Emergency supplies always get there first. 5-tier priority system.</p>
+        </div>
+        <div class="feature-box">
+          <h4>Live Visualization</h4>
+          <p>See every cart, job, and delivery in real-time on an interactive map.</p>
+        </div>
+        <div class="feature-box green">
+          <h4>Sustainability Tracking</h4>
+          <p>Real-time energy and CO2 monitoring. Optimize routes for minimal environmental impact.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: Demo Scenarios -->
+    <div class="slide">
+      <h2>4 Hospital Scenarios</h2>
+      <div class="scenario-grid">
+        <div class="scenario-box">
+          <h4>Hospital Rush Hour</h4>
+          <div class="meta">6 agents  |  10 jobs  |  Simple</div>
+          <p>Standard floor with ICU, OR, wards, and pharmacy</p>
+        </div>
+        <div class="scenario-box">
+          <h4>Emergency Department</h4>
+          <div class="meta">8 agents  |  14 jobs  |  Complex</div>
+          <p>High-acuity ED with trauma bays and resuscitation rooms</p>
+        </div>
+        <div class="scenario-box">
+          <h4>Multi-Wing Hospital</h4>
+          <div class="meta">10 agents  |  16 jobs  |  Complex</div>
+          <p>Large facility with ICU wing, OR suite, pharmacy, and lab</p>
+        </div>
+        <div class="scenario-box">
+          <h4>Surgical Center</h4>
+          <div class="meta">10 agents  |  16 jobs  |  Medium</div>
+          <p>8 operating rooms, pre-op, PACU, sterile supply</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: How It Works -->
+    <div class="slide">
+      <h2>How It Works</h2>
+      <div class="flow-diagram">
+        <div class="flow-step">Job Created</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Priority Queue</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Smart Dispatch</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">A* Pathfinding</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Delivery</div>
+      </div>
+      <ul style="margin-top: 50px;">
+        <li><strong>Cart proximity</strong> to pickup location</li>
+        <li><strong>Battery level</strong> and payload capacity</li>
+        <li><strong>Access permissions</strong> for ICU, OR, restricted areas</li>
+        <li><strong>Pool separation</strong> - urgent vs. non-urgent carts</li>
+      </ul>
+    </div>
+
+    <!-- Slide 6: Algorithm Deep Dive -->
+    <div class="slide">
+      <h2>Under the Hood: Algorithms</h2>
+      <div class="code-section">
+        <div class="code-card">
+          <div class="code-card-header">A* Pathfinding Algorithm</div>
+          <div class="code-card-body">
+            <pre><span class="keyword">function</span> <span class="function">findPath</span>(start, goal, grid) {
+  <span class="keyword">const</span> openSet = <span class="keyword">new</span> <span class="type">PriorityQueue</span>();
+  <span class="keyword">const</span> gScore = <span class="keyword">new</span> <span class="type">Map</span>();  <span class="comment">// cost from start</span>
+  <span class="keyword">const</span> fScore = <span class="keyword">new</span> <span class="type">Map</span>();  <span class="comment">// g + heuristic</span>
+
+  gScore.set(start, <span class="number">0</span>);
+  fScore.set(start, <span class="function">heuristic</span>(start, goal));
+
+  <span class="keyword">while</span> (!openSet.isEmpty()) {
+    <span class="keyword">const</span> current = openSet.pop();
+    <span class="keyword">if</span> (current === goal) <span class="keyword">return</span> path;
+
+    <span class="keyword">for</span> (<span class="keyword">const</span> neighbor <span class="keyword">of</span> <span class="function">getNeighbors</span>(current)) {
+      <span class="keyword">const</span> tentativeG = gScore.get(current) + <span class="number">1</span>;
+      <span class="keyword">if</span> (tentativeG < gScore.get(neighbor)) {
+        <span class="comment">// Found a better path</span>
+        cameFrom.set(neighbor, current);
+        gScore.set(neighbor, tentativeG);
+        fScore.set(neighbor, tentativeG + <span class="function">heuristic</span>(neighbor, goal));
+      }
+    }
+  }
+}</pre>
+          </div>
+          <div class="code-card-footer">Optimal pathfinding with Manhattan distance heuristic</div>
+        </div>
+        <div class="code-card">
+          <div class="code-card-header">Smart Job Dispatch</div>
+          <div class="code-card-body">
+            <pre><span class="keyword">function</span> <span class="function">assignBestAgent</span>(job, agents) {
+  <span class="comment">// Filter eligible agents</span>
+  <span class="keyword">const</span> eligible = agents.filter(agent =>
+    agent.status === <span class="string">'IDLE'</span> &&
+    agent.battery > <span class="number">20</span> &&
+    <span class="function">hasAccess</span>(agent, job.dropoff.roomId) &&
+    <span class="function">matchesPool</span>(agent.pool, job.priority)
+  );
+
+  <span class="comment">// Score each agent</span>
+  <span class="keyword">return</span> eligible.reduce((best, agent) => {
+    <span class="keyword">const</span> distance = <span class="function">manhattanDistance</span>(
+      agent.position,
+      job.pickup.position
+    );
+    <span class="keyword">const</span> score = distance +
+      (<span class="number">100</span> - agent.battery) * <span class="number">0.5</span>;
+
+    <span class="keyword">return</span> score < best.score
+      ? { agent, score }
+      : best;
+  }, { agent: <span class="keyword">null</span>, score: <span class="number">Infinity</span> });
+}</pre>
+          </div>
+          <div class="code-card-footer">Multi-factor scoring: distance + battery + permissions</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: Environmental Tracking -->
+    <div class="slide">
+      <h2>Environmental Metrics</h2>
+      <p style="margin-bottom: 20px;">Real-time sustainability tracking built into every delivery</p>
+      <div class="env-metrics-grid">
+        <div class="env-metric">
+          <div class="icon">⚡</div>
+          <h4>Energy Consumption</h4>
+          <p>Track watt-hours used per delivery and across the fleet</p>
+          <div class="formula">Wh = distance × drainRate</div>
+        </div>
+        <div class="env-metric">
+          <div class="icon">🌱</div>
+          <h4>CO2 Emissions</h4>
+          <p>Convert energy usage to carbon footprint in real-time</p>
+          <div class="formula">CO2(g) = Wh × 0.4 g/Wh</div>
+        </div>
+        <div class="env-metric">
+          <div class="icon">📊</div>
+          <h4>Deadheading Rate</h4>
+          <p>Measure empty cart travel to identify waste</p>
+          <div class="formula">% = emptyDist / totalDist</div>
+        </div>
+      </div>
+      <div class="feature-grid" style="margin-top: 30px;">
+        <div class="feature-box green">
+          <h4>Energy per Item</h4>
+          <p>Wh consumed per delivered item - key efficiency KPI for optimization</p>
+        </div>
+        <div class="feature-box green">
+          <h4>Low-Emission Choices</h4>
+          <p>Percentage of dispatches that chose the most energy-efficient cart</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 8: Environmental Impact -->
+    <div class="slide">
+      <h2>Environmental Impact</h2>
+      <div class="impact-visual">
+        <div class="impact-box before">
+          <div class="value">100%</div>
+          <div class="desc">Baseline Energy<br>(Naive Dispatch)</div>
+        </div>
+        <div class="impact-arrow">
+          <div class="arrow">→</div>
+          <div class="label">MedFlow<br>Optimization</div>
+        </div>
+        <div class="impact-box after">
+          <div class="value">60%</div>
+          <div class="desc">Optimized Energy<br>(40% Reduction)</div>
+        </div>
+      </div>
+      <div class="stat-grid four-col" style="margin-top: 50px;">
+        <div class="stat-box green">
+          <div class="number">-40%</div>
+          <div class="label">Energy Savings</div>
+        </div>
+        <div class="stat-box green">
+          <div class="number">-35%</div>
+          <div class="label">CO2 Reduction</div>
+        </div>
+        <div class="stat-box green">
+          <div class="number">-50%</div>
+          <div class="label">Deadheading</div>
+        </div>
+        <div class="stat-box green">
+          <div class="number">+25%</div>
+          <div class="label">Battery Life</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 9: Healthcare Sustainability -->
+    <div class="slide">
+      <h2>Healthcare & Sustainability</h2>
+      <div class="two-col">
+        <div class="col">
+          <h3>The Challenge</h3>
+          <ul>
+            <li><strong>4.4%</strong> of global emissions from healthcare</li>
+            <li>Hospitals run <strong>24/7/365</strong></li>
+            <li>Logistics often overlooked in sustainability plans</li>
+            <li>Manual systems can't optimize for efficiency</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3 style="color: #22a355;">MedFlow's Contribution</h3>
+          <ul class="green-bullets">
+            <li>Shortest-path routing minimizes energy use</li>
+            <li>Smart charging prevents battery waste</li>
+            <li>Batched deliveries reduce total trips</li>
+            <li>Real-time data enables continuous improvement</li>
+          </ul>
+        </div>
+      </div>
+      <p style="margin-top: 40px; font-size: 1.3rem;"><strong>Every optimized delivery is a step toward greener healthcare</strong></p>
+    </div>
+
+    <!-- Slide 10: Dashboard -->
+    <div class="slide">
+      <h2>Live Dashboard</h2>
+      <div class="feature-grid">
+        <div class="feature-box">
+          <h4>Map View</h4>
+          <p>Real-time cart positions, walkable paths, chargers, storage points</p>
+        </div>
+        <div class="feature-box">
+          <h4>Job Queue</h4>
+          <p>All pending deliveries with priorities, ETAs, and status</p>
+        </div>
+        <div class="feature-box">
+          <h4>Fleet Panel</h4>
+          <p>Cart status, battery levels, current assignments</p>
+        </div>
+        <div class="feature-box">
+          <h4>Triage Board</h4>
+          <p>Active medical cases and linked supply needs</p>
+        </div>
+        <div class="feature-box green">
+          <h4>Metrics Panel</h4>
+          <p>Energy, CO2, idle time, deadheading, on-time percentage</p>
+        </div>
+        <div class="feature-box">
+          <h4>Event Feed</h4>
+          <p>Live log of all system activities and replans</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 11: What We Track -->
+    <div class="slide">
+      <h2>What We Track</h2>
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="number">98%</div>
+          <div class="label">On-Time Delivery Rate</div>
+        </div>
+        <div class="stat-box green">
+          <div class="number">-40%</div>
+          <div class="label">Energy vs. Baseline</div>
+        </div>
+        <div class="stat-box green">
+          <div class="number">-35%</div>
+          <div class="label">CO2 Emissions</div>
+        </div>
+      </div>
+      <ul style="margin-top: 40px;">
+        <li><strong>Deadheading %</strong> - Carts moving without payload</li>
+        <li><strong>Idle Time</strong> - Waiting vs. charging breakdown</li>
+        <li><strong>Batched Deliveries</strong> - Efficiency from combining jobs</li>
+        <li><strong>Baseline Comparison</strong> - Improvement vs. naive dispatch</li>
+      </ul>
+    </div>
+
+    <!-- Slide 12: Tech Stack -->
+    <div class="slide">
+      <h2>Tech Stack</h2>
+      <div class="tech-grid">
+        <div class="tech-box">
+          <div class="name">React + TypeScript</div>
+          <div class="desc">Frontend framework</div>
+        </div>
+        <div class="tech-box">
+          <div class="name">Vite</div>
+          <div class="desc">Build tool</div>
+        </div>
+        <div class="tech-box">
+          <div class="name">Zustand</div>
+          <div class="desc">State management</div>
+        </div>
+        <div class="tech-box">
+          <div class="name">Tailwind CSS</div>
+          <div class="desc">Styling</div>
+        </div>
+        <div class="tech-box">
+          <div class="name">HTML5 Canvas</div>
+          <div class="desc">Map rendering</div>
+        </div>
+        <div class="tech-box">
+          <div class="name">A* Algorithm</div>
+          <div class="desc">Pathfinding</div>
+        </div>
+      </div>
+      <p style="margin-top: 40px;">Fast iteration, type safety, lightweight dependencies</p>
+    </div>
+
+    <!-- Slide 13: Future Vision -->
+    <div class="slide">
+      <h2>Future Vision</h2>
+      <div class="two-col">
+        <div class="col">
+          <h3>Phase 2: Intelligence</h3>
+          <ul>
+            <li>ML demand prediction</li>
+            <li>Dynamic cart rebalancing</li>
+            <li>Predictive maintenance</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3>Phase 3: Integration</h3>
+          <ul>
+            <li>EHR auto-ordering</li>
+            <li>Real hardware via ROS</li>
+            <li>Multi-floor elevators</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 14: Why Now -->
+    <div class="slide">
+      <h2>Why Now?</h2>
+      <ul style="font-size: 1.5rem;">
+        <li><strong>Labor shortage</strong> - Hospitals can't hire enough staff</li>
+        <li><strong>Autonomous tech ready</strong> - AMRs are mature and affordable</li>
+        <li><strong>Sustainability pressure</strong> - Healthcare must reduce emissions</li>
+        <li><strong>Post-COVID awareness</strong> - Supply chain resilience is critical</li>
+      </ul>
+      <p style="margin-top: 50px; font-size: 1.4rem;">MedFlow bridges the gap between autonomous hardware and intelligent software</p>
+    </div>
+
+    <!-- Slide 15: Demo -->
+    <div class="slide">
+      <h2>Try It Now</h2>
+      <div class="code-block">
+git clone https://github.com/BrandonwLii/MedFlow<br>
+cd MedFlow/frontend<br>
+npm install<br>
+npm run dev
+      </div>
+      <p style="margin-top: 30px;">Open <span class="highlight">http://localhost:5173</span> and select a scenario!</p>
+      <a href="https://github.com/BrandonwLii/MedFlow" class="cta-button" target="_blank">View on GitHub</a>
+    </div>
+
+    <!-- Slide 16: References -->
+    <div class="slide">
+      <h2>References</h2>
+      <ul style="font-size: 1.1rem; line-height: 2.4; max-width: 1000px;">
+        <li><strong>Healthcare emissions (4.4%):</strong> Health Care Without Harm. "Health Care Climate Footprint Report" (2019). global.noharm.org</li>
+        <li><strong>Nurse time on supplies (30%):</strong> Infor Healthcare Survey; Healthcare Management Council Nurse Survey (2010). 32% of nurses spend 20+ min/shift searching for supplies</li>
+        <li><strong>Hospital logistics costs:</strong> Up to 30% of hospital operating costs tied to logistics. Staff spend 20% of time on transport duties. (Springer, 2020)</li>
+        <li><strong>Supply chain inefficiency:</strong> American Hospital Association. Hospitals spend $25B annually on avoidable supply chain inefficiencies</li>
+        <li><strong>Equipment search time:</strong> GE Healthcare study: nurses spend avg. 21-57 min/shift searching for equipment. $14B lost productivity annually (MGM Solutions)</li>
+        <li><strong>AMR in hospitals:</strong> Scientific Reports (2024). Navigation benchmarking for autonomous mobile robots in hospital environment. DOI: 10.1038/s41598-024-69040-z</li>
+        <li><strong>AMR scheduling:</strong> PLOS ONE (2023). Stochastic scheduling of autonomous mobile robots at hospitals. DOI: 10.1371/journal.pone.0292002</li>
+        <li><strong>A* pathfinding:</strong> Hart, P.E., Nilsson, N.J., Raphael, B. "A Formal Basis for the Heuristic Determination of Minimum Cost Paths" (1968). IEEE Transactions on Systems Science and Cybernetics</li>
+      </ul>
+    </div>
+
+    <!-- Slide 17: Thank You -->
+    <div class="slide">
+      <div class="logo">🏥</div>
+      <h1>Thank You</h1>
+      <p class="subtitle">Questions?</p>
+      <p style="margin-top: 40px;">github.com/BrandonwLii/MedFlow</p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="prevSlide()">← Previous</button>
+    <button onclick="nextSlide()">Next →</button>
+  </div>
+
+  <div class="slide-counter">
+    <span id="current">1</span> / <span id="total">17</span>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+
+    document.getElementById('total').textContent = totalSlides;
+
+    function showSlide(n) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide = (n + totalSlides) % totalSlides;
+      slides[currentSlide].classList.add('active');
+      document.getElementById('current').textContent = currentSlide + 1;
+    }
+
+    function nextSlide() {
+      showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      showSlide(currentSlide - 1);
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      }
+    });
+
+    // Click to advance
+    document.querySelector('.slideshow').addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
+        nextSlide();
+      }
+    });
+  </script>
+</body>
+</html>

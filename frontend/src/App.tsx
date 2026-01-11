@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
@@ -16,6 +16,7 @@ import { TriageBoard } from './components/TriageBoard';
 import { EventFeed } from './components/EventFeed';
 import { MetricsPanel } from './components/MetricsPanel';
 import { SimulationControls } from './components/SimulationControls';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import type { Scenario } from './types';
 
 const App = () => {
@@ -40,6 +41,15 @@ const App = () => {
 
   // Initialize simulation hook
   useSimulation();
+
+  // Listen for show-on-map events from EventFeed
+  useEffect(() => {
+    const handleShowOnMap = () => {
+      setActiveTab('map');
+    };
+    window.addEventListener('medflow:show-on-map', handleShowOnMap);
+    return () => window.removeEventListener('medflow:show-on-map', handleShowOnMap);
+  }, []);
 
   // Export scenario to JSON file
   const handleExport = () => {
@@ -147,16 +157,24 @@ const App = () => {
             </div>
 
             <TabsContent value="map" className="flex-1 m-0 p-0">
-              <MapEditor />
+              <ErrorBoundary>
+                <MapEditor />
+              </ErrorBoundary>
             </TabsContent>
             <TabsContent value="fleet" className="flex-1 min-h-0 m-0 p-4 overflow-auto">
-              <FleetPanel />
+              <ErrorBoundary>
+                <FleetPanel />
+              </ErrorBoundary>
             </TabsContent>
             <TabsContent value="queue" className="flex-1 min-h-0 m-0 p-4 overflow-auto">
-              <JobQueue />
+              <ErrorBoundary>
+                <JobQueue />
+              </ErrorBoundary>
             </TabsContent>
             <TabsContent value="triage" className="flex-1 min-h-0 m-0 p-4 overflow-auto">
-              <TriageBoard />
+              <ErrorBoundary>
+                <TriageBoard />
+              </ErrorBoundary>
             </TabsContent>
           </Tabs>
         </div>
@@ -164,10 +182,14 @@ const App = () => {
         {/* Right Panel - Events and Metrics */}
         <div className="flex w-80 flex-col border-l">
           <div className="flex-1 overflow-hidden">
-            <EventFeed />
+            <ErrorBoundary>
+              <EventFeed />
+            </ErrorBoundary>
           </div>
           <div className="border-t">
-            <MetricsPanel />
+            <ErrorBoundary>
+              <MetricsPanel />
+            </ErrorBoundary>
           </div>
         </div>
       </div>

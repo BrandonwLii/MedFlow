@@ -20,41 +20,7 @@ import { useTriageStore, useJobStore, useMapStore, useEventStore, createEvent } 
 import { useSimulationStore } from '../stores';
 import { generateId } from '../utils';
 import type { TriageCase, TriageLevel, TriageBundle, Job } from '../types';
-
-const TRIAGE_BUNDLES_DATA: Record<TriageBundle, { name: string; items: { type: string; quantity: number; weight: number }[] }> = {
-  CRASH_CODE_BLUE: {
-    name: 'Crash/Code Blue',
-    items: [
-      { type: 'Defibrillator', quantity: 1, weight: 5 },
-      { type: 'Emergency Meds', quantity: 1, weight: 0.5 },
-      { type: 'IV Kit', quantity: 2, weight: 1 },
-    ],
-  },
-  TRAUMA: {
-    name: 'Trauma',
-    items: [
-      { type: 'Blood Products', quantity: 2, weight: 1 },
-      { type: 'Surgical Kit', quantity: 1, weight: 3 },
-      { type: 'Bandages', quantity: 5, weight: 0.5 },
-    ],
-  },
-  OR_PREP: {
-    name: 'OR Prep',
-    items: [
-      { type: 'Surgical Instruments', quantity: 1, weight: 4 },
-      { type: 'Sterile Drapes', quantity: 3, weight: 1 },
-      { type: 'Anesthesia Supplies', quantity: 1, weight: 2 },
-    ],
-  },
-  ISOLATION: {
-    name: 'Isolation',
-    items: [
-      { type: 'PPE Kit', quantity: 5, weight: 0.5 },
-      { type: 'Isolation Gowns', quantity: 10, weight: 1 },
-      { type: 'N95 Masks', quantity: 20, weight: 0.2 },
-    ],
-  },
-};
+import { TRIAGE_BUNDLES } from '../types';
 
 const LEVEL_TO_PRIORITY: Record<TriageLevel, string> = {
   1: 'IMMEDIATE',
@@ -126,7 +92,7 @@ export const TriageBoard = () => {
     ));
 
     // Create jobs from bundle
-    const bundleData = TRIAGE_BUNDLES_DATA[newCase.bundle];
+    const bundleData = TRIAGE_BUNDLES[newCase.bundle];
     const priority = LEVEL_TO_PRIORITY[newCase.level] as any;
 
     bundleData.items.forEach((item) => {
@@ -239,7 +205,7 @@ export const TriageBoard = () => {
             {triageCase.bundle && (
               <div className="flex items-center gap-2">
                 <Package className="h-3 w-3" />
-                <span>Bundle: {TRIAGE_BUNDLES_DATA[triageCase.bundle].name}</span>
+                <span>Bundle: {TRIAGE_BUNDLES[triageCase.bundle].name}</span>
               </div>
             )}
             <div className="flex items-center gap-2">
@@ -312,7 +278,7 @@ export const TriageBoard = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(TRIAGE_BUNDLES_DATA).map(([key, bundle]) => (
+                    {Object.entries(TRIAGE_BUNDLES).map(([key, bundle]) => (
                       <SelectItem key={key} value={key}>
                         {bundle.name}
                       </SelectItem>

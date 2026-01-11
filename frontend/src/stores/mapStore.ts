@@ -17,6 +17,8 @@ interface MapState {
   activeFloorId: string | null;
   selectedTool: MapTool;
   isLoading: boolean;
+  highlightPosition: Position | null;
+  highlightFloorId: string | null;
 }
 
 export type MapTool =
@@ -70,6 +72,10 @@ interface MapActions {
   // Utility
   getFloor: (floorId: string) => Floor | undefined;
   getCellAt: (floorId: string, x: number, y: number) => GridCell | undefined;
+
+  // Highlight
+  setHighlight: (position: Position, floorId: string) => void;
+  clearHighlight: () => void;
 }
 
 const createEmptyMap = (): HospitalMap => ({
@@ -87,6 +93,8 @@ export const useMapStore = create<MapState & MapActions>()(
     activeFloorId: null,
     selectedTool: 'SELECT',
     isLoading: false,
+    highlightPosition: null,
+    highlightFloorId: null,
 
     // Floor management
     addFloor: (floor) =>
@@ -240,5 +248,19 @@ export const useMapStore = create<MapState & MapActions>()(
       const floor = get().map.floors.find((f) => f.id === floorId);
       return floor?.grid[y]?.[x];
     },
+
+    // Highlight
+    setHighlight: (position, floorId) =>
+      set((state) => {
+        state.highlightPosition = position;
+        state.highlightFloorId = floorId;
+        state.activeFloorId = floorId;
+      }),
+
+    clearHighlight: () =>
+      set((state) => {
+        state.highlightPosition = null;
+        state.highlightFloorId = null;
+      }),
   }))
 );

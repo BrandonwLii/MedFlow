@@ -4,6 +4,7 @@ import { Card } from './ui/card';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Separator } from './ui/separator';
+import { Badge } from './ui/badge';
 import {
   MousePointer2,
   Footprints,
@@ -19,6 +20,21 @@ import {
 import { useMapStore, useAgentStore, type MapTool } from '../stores';
 import { createFloorFromImage, pixelToGrid, generateId, AGENT_STATUS_COLORS } from '../utils';
 import type { Floor, GridCell } from '../types';
+
+// Access profiles for restricted areas with both Tailwind and canvas colors
+const RESTRICTED_PROFILES = [
+  { id: 'ICU', label: 'ICU', color: 'bg-red-500', canvasColor: 'rgba(239, 68, 68, 0.4)' },
+  { id: 'OR', label: 'Operating Room', color: 'bg-orange-500', canvasColor: 'rgba(249, 115, 22, 0.4)' },
+  { id: 'PHARMACY', label: 'Pharmacy', color: 'bg-purple-500', canvasColor: 'rgba(168, 85, 247, 0.4)' },
+  { id: 'EMERGENCY', label: 'Emergency', color: 'bg-yellow-500', canvasColor: 'rgba(234, 179, 8, 0.4)' },
+  { id: 'WARD', label: 'Ward', color: 'bg-blue-500', canvasColor: 'rgba(59, 130, 246, 0.4)' },
+  { id: 'SUPPLY', label: 'Supply', color: 'bg-cyan-500', canvasColor: 'rgba(6, 182, 212, 0.4)' },
+] as const;
+
+// Map profile IDs to canvas colors for quick lookup
+const PROFILE_COLORS: Record<string, string> = Object.fromEntries(
+  RESTRICTED_PROFILES.map((p) => [p.id, p.canvasColor])
+);
 
 // Cache for loaded floor images
 const imageCache = new Map<string, HTMLImageElement>();
@@ -40,11 +56,15 @@ export const MapEditor = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPainting, setIsPainting] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const [selectedRestrictedProfile, setSelectedRestrictedProfile] = useState<string>('ICU');
+  const [hoveredCell, setHoveredCell] = useState<{ x: number; y: number } | null>(null);
 
   const {
     map,
     activeFloorId,
     selectedTool,
+    highlightPosition,
+    highlightFloorId,
     setSelectedTool,
     addFloor,
     setActiveFloor,
@@ -52,6 +72,7 @@ export const MapEditor = () => {
     addCharger,
     addStoragePoint,
     addStagingArea,
+    clearHighlight,
   } = useMapStore();
 
   const agents = useAgentStore((s) => s.agents);
@@ -95,6 +116,9 @@ export const MapEditor = () => {
     reader.readAsDataURL(file);
   };
 
+  // Check if highlight is on current floor
+  const showHighlight = highlightPosition && highlightFloorId === activeFloorId;
+
   // Draw the canvas - uses cached images to avoid stale closure issues
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -113,6 +137,10 @@ export const MapEditor = () => {
         // Image already cached - draw synchronously
         ctx.drawImage(cachedImg, 0, 0, canvas.width, canvas.height);
         drawGrid(ctx, activeFloor, floorAgents);
+        // Draw highlight if on this floor
+        if (showHighlight && highlightPosition) {
+          drawHighlight(ctx, activeFloor, highlightPosition);
+        }
       } else {
         // Load and cache the image
         const img = new Image();
@@ -129,6 +157,11 @@ export const MapEditor = () => {
                 (a) => a.floorId === activeFloor.id
               );
               drawGrid(newCtx, activeFloor, currentAgents);
+              // Draw highlight if applicable
+              const mapState = useMapStore.getState();
+              if (mapState.highlightPosition && mapState.highlightFloorId === activeFloor.id) {
+                drawHighlight(newCtx, activeFloor, mapState.highlightPosition);
+              }
             }
           }
         };
@@ -138,8 +171,12 @@ export const MapEditor = () => {
       ctx.fillStyle = '#1a1a2e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       drawGrid(ctx, activeFloor, floorAgents);
+      // Draw highlight if on this floor
+      if (showHighlight && highlightPosition) {
+        drawHighlight(ctx, activeFloor, highlightPosition);
+      }
     }
-  }, [activeFloor, floorAgents]);
+  }, [activeFloor, floorAgents, showHighlight, highlightPosition]);
 
   const drawGrid = (ctx: CanvasRenderingContext2D, floor: Floor, agents: typeof floorAgents) => {
     const { gridSize, grid } = floor;
@@ -161,8 +198,15 @@ export const MapEditor = () => {
           ctx.lineWidth = 2;
           ctx.strokeRect(px, py, gridSize, gridSize);
         } else if (cell.isRestricted) {
-          ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+          // Use profile-specific color if available
+          const profile = cell.restrictedAccessProfiles?.[0];
+          ctx.fillStyle = profile ? (PROFILE_COLORS[profile] || 'rgba(239, 68, 68, 0.4)') : 'rgba(239, 68, 68, 0.4)';
           ctx.fillRect(px, py, gridSize, gridSize);
+          // Add a subtle border to make restricted areas more visible
+          const borderColor = profile ? (PROFILE_COLORS[profile]?.replace('0.4', '0.8') || 'rgba(239, 68, 68, 0.8)') : 'rgba(239, 68, 68, 0.8)';
+          ctx.strokeStyle = borderColor;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(px + 1, py + 1, gridSize - 2, gridSize - 2);
         } else if (cell.walkable) {
           ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
           ctx.fillRect(px, py, gridSize, gridSize);
@@ -226,6 +270,33 @@ export const MapEditor = () => {
     }
   };
 
+  // Draw highlight marker (pulsing red circle)
+  const drawHighlight = (ctx: CanvasRenderingContext2D, floor: Floor, position: { x: number; y: number }) => {
+    const { gridSize } = floor;
+    const hx = position.x * gridSize + gridSize / 2;
+    const hy = position.y * gridSize + gridSize / 2;
+
+    // Draw pulsing outer ring
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(hx, hy, gridSize, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Draw inner ring
+    ctx.strokeStyle = 'rgba(239, 68, 68, 1)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(hx, hy, gridSize / 1.5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Draw center dot
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.9)';
+    ctx.beginPath();
+    ctx.arc(hx, hy, gridSize / 4, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
   // Handle mouse events for painting
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!activeFloor || selectedTool === 'SELECT') return;
@@ -234,12 +305,32 @@ export const MapEditor = () => {
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isPainting || !activeFloor || selectedTool === 'SELECT') return;
+    if (!activeFloor) return;
+
+    // Track hovered cell for info display
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      const gridPos = pixelToGrid(x, y, activeFloor.gridSize);
+      setHoveredCell(gridPos);
+    }
+
+    // Handle painting
+    if (!isPainting || selectedTool === 'SELECT') return;
     paintAtPosition(e);
   };
 
   const handleMouseUp = () => {
     setIsPainting(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsPainting(false);
+    setHoveredCell(null);
   };
 
   const paintAtPosition = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -272,6 +363,8 @@ export const MapEditor = () => {
         break;
       case 'RESTRICTED':
         updates.isRestricted = true;
+        updates.walkable = true;
+        updates.restrictedAccessProfiles = [selectedRestrictedProfile];
         break;
       case 'CHARGER':
         updates.isCharger = true;
@@ -333,6 +426,16 @@ export const MapEditor = () => {
     drawCanvas();
   }, [drawCanvas]);
 
+  // Auto-clear highlight after 5 seconds
+  useEffect(() => {
+    if (highlightPosition && highlightFloorId) {
+      const timer = setTimeout(() => {
+        clearHighlight();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightPosition, highlightFloorId, clearHighlight]);
+
   return (
     <div className="flex h-full">
       {/* Toolbar */}
@@ -354,6 +457,30 @@ export const MapEditor = () => {
             </Button>
           ))}
         </div>
+
+        {/* Restricted Area Profile Selector */}
+        {selectedTool === 'RESTRICTED' && (
+          <div className="mt-3 p-2 bg-muted rounded-md">
+            <Label className="text-xs font-medium">Access Required:</Label>
+            <div className="mt-2 space-y-1">
+              {RESTRICTED_PROFILES.map((profile) => (
+                <Button
+                  key={profile.id}
+                  variant={selectedRestrictedProfile === profile.id ? 'default' : 'ghost'}
+                  size="sm"
+                  className="w-full justify-start text-xs h-7"
+                  onClick={() => setSelectedRestrictedProfile(profile.id)}
+                >
+                  <div className={`w-2 h-2 rounded-full ${profile.color} mr-2`} />
+                  {profile.label}
+                </Button>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              Only agents with this profile can enter
+            </p>
+          </div>
+        )}
 
         <Separator className="my-2" />
 
@@ -396,6 +523,44 @@ export const MapEditor = () => {
           <p>Click and drag to paint cells.</p>
           <p className="mt-1">Upload a floor plan image to get started.</p>
         </div>
+
+        {/* Hovered Cell Info */}
+        {hoveredCell && activeFloor && (
+          <div className="mt-auto pt-2 border-t">
+            <Label className="text-xs font-medium">Cell Info</Label>
+            {(() => {
+              const cell = activeFloor.grid[hoveredCell.y]?.[hoveredCell.x];
+              if (!cell) return <p className="text-[10px] text-muted-foreground">Out of bounds</p>;
+
+              return (
+                <div className="mt-1 space-y-1 text-[10px]">
+                  <p>Position: ({hoveredCell.x}, {hoveredCell.y})</p>
+                  {cell.isRestricted && (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <span className="text-red-500 font-medium">Restricted:</span>
+                      {cell.restrictedAccessProfiles?.map((p) => (
+                        <Badge key={p} variant="outline" className="text-[9px] py-0 px-1">
+                          {p}
+                        </Badge>
+                      )) || <span className="text-muted-foreground">No profile set</span>}
+                    </div>
+                  )}
+                  {cell.isQuarantine && (
+                    <p className="text-yellow-600 font-medium">Quarantine Zone</p>
+                  )}
+                  {cell.isCharger && <p className="text-blue-500">Charger Station</p>}
+                  {cell.isStorage && <p className="text-purple-500">Storage Point</p>}
+                  {cell.isStaging && <p className="text-cyan-500">Staging Area</p>}
+                  {cell.isConnector && <p className="text-orange-500">Connector</p>}
+                  {!cell.walkable && !cell.isQuarantine && <p className="text-gray-500">Obstacle</p>}
+                  {cell.walkable && !cell.isRestricted && !cell.isCharger && !cell.isStorage && !cell.isStaging && !cell.isConnector && (
+                    <p className="text-green-500">Walkable</p>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        )}
       </div>
 
       {/* Canvas Area */}
@@ -411,7 +576,7 @@ export const MapEditor = () => {
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
             />
           </div>
         ) : (
